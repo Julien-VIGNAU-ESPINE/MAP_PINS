@@ -5,6 +5,8 @@ body {
     background-color: #f4f4f4;
     font-family: 'Roboto', sans-serif;
     color: #333;
+    /* Empêche le zoom auto sur iOS quand on clique sur un champ */
+    font-size: 16px;
 }
 
 #map {
@@ -12,7 +14,11 @@ body {
     width: 100%;
 }
 
-/* Formulaire (inchangé) */
+/* ======================================= */
+/* === SECTION MODIFIÉE POUR RESPONSIVE === */
+/* ======================================= */
+
+/* Conteneur du formulaire (thème clair) */
 #form-container {
     background-color: #ffffff;
     padding: 20px;
@@ -23,14 +29,21 @@ body {
     transform: translate(-50%, -50%);
     z-index: 1001;
     box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
-    width: 300px;
+
+    /* MODIFICATION ICI : plus de largeur fixe */
+    width: 90%;
+    /* Prend 90% de la largeur de l'écran */
+    max-width: 380px;
+    /* Mais ne dépasse pas 380px sur desktop */
+    box-sizing: border-box;
+    /* Inclut le padding dans la largeur */
 }
 
 .hidden {
     display: none;
 }
 
-/* ... (tout le style du formulaire est identique) ... */
+/* Style du formulaire */
 form {
     display: flex;
     flex-direction: column;
@@ -52,12 +65,15 @@ form input,
 form select,
 form textarea {
     width: 100%;
-    padding: 8px;
+    padding: 10px;
+    /* Un peu plus grand pour les doigts */
     border: 1px solid #ccc;
     background-color: #f9f9f9;
     color: #333;
     border-radius: 4px;
     box-sizing: border-box;
+    font-size: 1em;
+    /* Hérite du 16px du body */
 }
 
 form .form-buttons {
@@ -68,7 +84,8 @@ form .form-buttons {
 }
 
 form button {
-    padding: 10px;
+    padding: 12px;
+    /* Plus gros pour les doigts */
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -86,28 +103,41 @@ form button#cancelButton {
 }
 
 
-/* ============ SECTION MODIFIÉE ============ */
+/* ======================================= */
+/* === SECTION MODIFIÉE POUR RESPONSIVE === */
+/* ======================================= */
+
 /* Conteneur du volet */
 .legend-container {
     position: absolute;
     bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1000;
-    width: 90%;
+    left: 0;
+    /* Aligné à gauche */
+    right: 0;
+    /* Aligné à droite */
+    margin-left: auto;
+    /* Centrage */
+    margin-right: auto;
+    /* Centrage */
+
+    /* MODIFICATION ICI : plus de 90% */
+    width: 100%;
+    /* Prend toute la largeur sur mobile */
     max-width: 600px;
-    /* Plus large pour être plus lisible */
+    /* Limité sur desktop */
+
+    z-index: 1000;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.15);
     border-radius: 8px 8px 0 0;
     overflow: hidden;
-    /* Important pour les coins arrondis */
 }
 
 /* Poignée cliquable */
 .legend-handle {
     background-color: #ffffff;
     color: #333;
-    padding: 12px 20px;
+    padding: 14px 20px;
+    /* Plus haut pour les doigts */
     text-align: center;
     cursor: pointer;
     font-weight: 500;
@@ -125,10 +155,9 @@ form button#cancelButton {
     font-size: 12px;
     transition: transform 0.3s ease-out;
     transform: rotate(0deg);
-    /* Flèche vers le haut par défaut */
 }
 
-/* Contenu de la légende (ce qui était .legend avant) */
+/* Contenu de la légende */
 .legend {
     background-color: rgba(255, 255, 255, 0.95);
     color: #333;
@@ -139,13 +168,9 @@ form button#cancelButton {
     gap: 15px;
     align-items: center;
     justify-content: center;
-
-    /* Transitions pour l'animation */
     max-height: 300px;
-    /* Hauteur max (ajuste si besoin) */
     transition: all 0.3s ease-out;
     overflow-y: auto;
-    /* Ajoute un scroll si trop de catégories */
 }
 
 /* ----- L'ÉTAT FERMÉ (CLOSED) ----- */
@@ -155,21 +180,18 @@ form button#cancelButton {
     padding-bottom: 0;
     border-top: none;
     overflow: hidden;
-    /* Cacher le contenu */
 }
 
 .legend-container.closed .legend-handle {
     border-bottom-color: transparent;
-    /* Cacher la bordure quand fermé */
 }
 
 .legend-container.closed .legend-handle .arrow {
     transform: rotate(180deg);
-    /* Flèche vers le bas */
 }
 
 
-/* Styles des items de la légende (inchangés) */
+/* Styles des items de la légende */
 .legend div {
     display: flex;
     align-items: center;
@@ -204,4 +226,10 @@ form button#cancelButton {
     transition: transform 0.2s;
 }
 
-/* ... (le reste du style est identique) ... */
+#show-all:hover {
+    transform: scale(1.1);
+}
+
+#show-all:active {
+    transform: scale(1);
+}
