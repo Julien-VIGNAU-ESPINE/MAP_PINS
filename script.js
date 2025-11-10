@@ -34,7 +34,7 @@ const showAllButton = document.getElementById('show-all');
 
 // Initialise la carte (j'ai gardé le fond de carte de ton code)
 const map = L.map('map').setView([48.8566, 2.3522], 5); // Centre sur Paris
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { // Fond de carte sombre
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { // Fond de carte clair
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/">CARTO</a>',
 }).addTo(map);
 
@@ -234,4 +234,5 @@ showAllButton.addEventListener('click', () => {
 // ===================================================================
 
 // Charge les pins depuis Firebase au lancement
+
 loadPinsFromFirebase();
