@@ -1,10 +1,10 @@
-/* Style de base (de ton code) */
+/* Style de base (thème clair) */
 body {
     margin: 0;
     padding: 0;
-    background-color: #222;
+    background-color: #f4f4f4;
     font-family: 'Roboto', sans-serif;
-    color: white;
+    color: #333;
 }
 
 #map {
@@ -12,30 +12,25 @@ body {
     width: 100%;
 }
 
-/* Conteneur du formulaire (de ton code, avec ajustements) */
+/* Formulaire (inchangé) */
 #form-container {
-    background-color: #333;
+    background-color: #ffffff;
     padding: 20px;
     border-radius: 8px;
     position: absolute;
     top: 50%;
-    /* Centré verticalement */
     left: 50%;
-    /* Centré horizontalement */
     transform: translate(-50%, -50%);
-    /* Ajustement précis du centrage */
     z-index: 1001;
-    /* Doit être au-dessus de la carte */
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5);
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
     width: 300px;
 }
 
-/* Classe pour cacher le formulaire (de ton code) */
 .hidden {
     display: none;
 }
 
-/* Style du formulaire */
+/* ... (tout le style du formulaire est identique) ... */
 form {
     display: flex;
     flex-direction: column;
@@ -45,10 +40,12 @@ form {
 form h3 {
     text-align: center;
     margin-top: 0;
+    color: #333;
 }
 
 form label {
     font-weight: 500;
+    color: #555;
 }
 
 form input,
@@ -56,12 +53,11 @@ form select,
 form textarea {
     width: 100%;
     padding: 8px;
-    border: 1px solid #555;
-    background-color: #444;
-    color: white;
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+    color: #333;
     border-radius: 4px;
     box-sizing: border-box;
-    /* Important pour que le padding n'augmente pas la largeur */
 }
 
 form .form-buttons {
@@ -81,44 +77,99 @@ form button {
 
 form button[type="submit"] {
     background-color: #1E90FF;
-    /* Bleu */
     color: white;
 }
 
 form button#cancelButton {
-    background-color: #777;
-    /* Gris */
-    color: white;
+    background-color: #ddd;
+    color: #333;
 }
 
 
-/* Légende (de ton code, avec ajustements) */
-.legend {
-    background-color: rgba(255, 255, 255, 0.9);
-    /* Fond blanc semi-transparent */
-    color: #333;
-    /* Texte foncé pour la lisibilité */
-    padding: 10px 15px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
+/* ============ SECTION MODIFIÉE ============ */
+/* Conteneur du volet */
+.legend-container {
     position: absolute;
-    bottom: 20px;
-    /* Remonté pour être plus visible */
+    bottom: 0;
     left: 50%;
-    /* Centré */
     transform: translateX(-50%);
-    /* Ajustement précis du centrage */
     z-index: 1000;
+    width: 90%;
+    max-width: 600px;
+    /* Plus large pour être plus lisible */
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.15);
+    border-radius: 8px 8px 0 0;
+    overflow: hidden;
+    /* Important pour les coins arrondis */
+}
+
+/* Poignée cliquable */
+.legend-handle {
+    background-color: #ffffff;
+    color: #333;
+    padding: 12px 20px;
+    text-align: center;
+    cursor: pointer;
+    font-weight: 500;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.legend-handle:hover {
+    background-color: #f9f9f9;
+}
+
+.legend-handle .arrow {
+    font-size: 12px;
+    transition: transform 0.3s ease-out;
+    transform: rotate(0deg);
+    /* Flèche vers le haut par défaut */
+}
+
+/* Contenu de la légende (ce qui était .legend avant) */
+.legend {
+    background-color: rgba(255, 255, 255, 0.95);
+    color: #333;
+    padding: 15px;
+    border-top: none;
     display: flex;
     flex-wrap: wrap;
     gap: 15px;
-    /* Plus d'espace */
     align-items: center;
     justify-content: center;
-    /* Centrer les éléments */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+
+    /* Transitions pour l'animation */
+    max-height: 300px;
+    /* Hauteur max (ajuste si besoin) */
+    transition: all 0.3s ease-out;
+    overflow-y: auto;
+    /* Ajoute un scroll si trop de catégories */
 }
 
+/* ----- L'ÉTAT FERMÉ (CLOSED) ----- */
+.legend-container.closed .legend {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-top: none;
+    overflow: hidden;
+    /* Cacher le contenu */
+}
+
+.legend-container.closed .legend-handle {
+    border-bottom-color: transparent;
+    /* Cacher la bordure quand fermé */
+}
+
+.legend-container.closed .legend-handle .arrow {
+    transform: rotate(180deg);
+    /* Flèche vers le bas */
+}
+
+
+/* Styles des items de la légende (inchangés) */
 .legend div {
     display: flex;
     align-items: center;
@@ -139,7 +190,6 @@ form button#cancelButton {
     border: 1px solid rgba(0, 0, 0, 0.2);
 }
 
-/* Bouton "Tout" (de ton code) */
 #show-all-container {
     display: flex;
     align-items: center;
@@ -154,10 +204,4 @@ form button#cancelButton {
     transition: transform 0.2s;
 }
 
-#show-all:hover {
-    transform: scale(1.1);
-}
-
-#show-all:active {
-    transform: scale(1);
-}
+/* ... (le reste du style est identique) ... */

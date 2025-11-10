@@ -2,25 +2,20 @@
 // ÉTAPE 1: CONFIGURATION DE FIREBASE
 // ===================================================================
 
-// COLLE ICI TON OBJET firebaseConfig 
+// REMPLACE CECI PAR TES NOUVELLES CLÉS (après les avoir régénérées!)
 const firebaseConfig = {
-    apiKey: "AIzaSyAwTF5Gg7CtH-gC5wbuAwHYieA5s0o-lzA",
-  authDomain: "mappins-e290e.firebaseapp.com",
-  projectId: "mappins-e290e",
-  storageBucket: "mappins-e290e.firebasestorage.app",
-  messagingSenderId: "233894828655",
-  appId: "1:233894828655:web:a2319daa2343d178e9cb9a",
-  measurementId: "G-W8LGBXGSR6"
+    apiKey: "TES_NOUVELLES_INFOS_ICI",
+    authDomain: "TES_NOUVELLES_INFOS_ICI",
+    projectId: "TES_NOUVELLES_INFOS_ICI",
+    storageBucket: "TES_NOUVELLES_INFOS_ICI",
+    messagingSenderId: "TES_NOUVELLES_INFOS_ICI",
+    appId: "TES_NOUVELLES_INFOS_ICI"
 };
-
-// IL NE DOIT PAS Y AVOIR D'AUTRES LIGNES 'import' AVANT ÇA
 
 // Initialise Firebase (Version 8)
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const lieuxCollection = db.collection('lieux'); 
-
-// ... le reste du code (ÉTAPE 2, etc.) ne change pas ...
 
 // ===================================================================
 // ÉTAPE 2: VARIABLES GLOBALES ET INITIALISATION
@@ -32,13 +27,13 @@ const formContainer = document.getElementById('form-container');
 const cancelButton = document.getElementById('cancelButton');
 const showAllButton = document.getElementById('show-all');
 
-// Initialise la carte (j'ai gardé le fond de carte de ton code)
+// Initialise la carte (fond de carte clair)
 const map = L.map('map').setView([48.8566, 2.3522], 5); // Centre sur Paris
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { // Fond de carte clair
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { 
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/">CARTO</a>',
 }).addTo(map);
 
-// Couleurs (de ton code)
+// Couleurs
 const colorMap = {
     restaurant: '#780096',
     bar: '#2300eb',
@@ -68,7 +63,6 @@ function displayPins(pinsToDisplay) {
     pinsToDisplay.forEach(pin => {
         const color = colorMap[pin.type] || colorMap['other'];
         
-        // Utilise L.circleMarker (de ton code)
         const marker = L.circleMarker([pin.lat, pin.lon], {
             radius: 10,
             fillColor: color,
@@ -78,7 +72,7 @@ function displayPins(pinsToDisplay) {
             fillOpacity: 0.9
         }).addTo(map);
 
-        // Pop-up (de ton code)
+        // Pop-up
         marker.bindPopup(`
             <b>${pin.name}</b><br>
             Date: ${pin.date}<br>
@@ -96,11 +90,11 @@ async function loadPinsFromFirebase() {
         allPins = []; // Réinitialise le cache local
         snapshot.forEach(doc => {
             const data = doc.data();
-            data.id = doc.id; // On garde l'ID au cas où
+            data.id = doc.id; 
             allPins.push(data);
         });
 
-        // Trier par date (de ton code)
+        // Trier par date
         allPins.sort((a, b) => new Date(a.date) - new Date(b.date));
         
         // Afficher tous les pins chargés
@@ -116,7 +110,7 @@ async function loadPinsFromFirebase() {
 // ÉTAPE 4: GESTION DU FORMULAIRE ET DES CLICS
 // ===================================================================
 
-// Au clic sur la carte (de ton code, adapté)
+// Au clic sur la carte
 map.on('click', function (e) {
     // N'ouvre pas le formulaire si on clique sur un marqueur
     if (e.originalEvent.target.classList.contains('leaflet-interactive')) {
@@ -125,12 +119,12 @@ map.on('click', function (e) {
 
     currentLatLon = e.latlng;
 
-    // Supprime l'ancien marqueur temporaire s'il existe
+    // Supprime l'ancien marqueur temporaire
     if (tempMarker) {
         map.removeLayer(tempMarker);
     }
 
-    // Crée un marqueur temporaire (de ton code)
+    // Crée un marqueur temporaire
     tempMarker = L.circleMarker(currentLatLon, {
         radius: 8,
         fillColor: '#FF6347', // Couleur "temporaire"
@@ -149,21 +143,21 @@ map.on('click', function (e) {
 
 // Soumission du formulaire (logique Firebase)
 form.addEventListener('submit', async (e) => {
-    e.preventDefault(); // Empêche le rechargement de la page
+    e.preventDefault(); 
 
     if (!currentLatLon) {
         alert('Erreur : emplacement non défini.');
         return;
     }
 
-    // Crée l'objet "pin" (de ton code)
+    // Crée l'objet "pin"
     const newPin = {
         name: document.getElementById('name').value,
         type: document.getElementById('type').value,
         description: document.getElementById('description').value,
         date: document.getElementById('date').value,
         lat: currentLatLon.lat,
-        lon: currentLatLon.lng // Note: Leaflet utilise 'lng', ton code 'lon'. C'est parfait.
+        lon: currentLatLon.lng 
     };
 
     try {
@@ -171,13 +165,8 @@ form.addEventListener('submit', async (e) => {
         const docRef = await lieuxCollection.add(newPin);
         console.log("Pin enregistré dans Firebase avec l'ID: ", docRef.id);
 
-        // Ajoute le nouveau pin au cache local
         allPins.push(newPin);
-        
-        // Ré-affiche tous les pins (ou juste le nouveau)
         displayPins(allPins);
-
-        // Cache le formulaire et nettoie
         cacherFormulaire();
 
     } catch (error) {
@@ -201,29 +190,42 @@ function cacherFormulaire() {
 }
 
 // ===================================================================
-// ÉTAPE 5: GESTION DES FILTRES (DE TON CODE)
+// ÉTAPE 5: GESTION DES FILTRES ET DU VOLET
 // ===================================================================
 
-// Filtrer les pins par type
+// --- GESTION DU VOLET DE LÉGENDE ---
+const legendContainer = document.getElementById('legend-container');
+const legendHandle = document.getElementById('legend-handle');
+
+// Ferme le volet par défaut au chargement
+legendContainer.classList.add('closed');
+
+// Ajoute l'événement de clic sur la poignée
+legendHandle.addEventListener('click', () => {
+    legendContainer.classList.toggle('closed');
+});
+// --- FIN DU BLOC VOLET ---
+
+
+// Fonctions de filtre
 function filterPinsByType(type) {
     const filteredPins = allPins.filter(pin => pin.type === type);
     displayPins(filteredPins);
 }
 
-// Afficher tous les pins
 function showAllPins() {
     displayPins(allPins);
 }
 
-// Écouter les clics sur les éléments de la légende
-document.querySelectorAll('.legend div[data-type]').forEach(element => {
+// Écoute les clics sur les catégories (dans le bon conteneur)
+document.querySelectorAll('#legend-content div[data-type]').forEach(element => {
     element.addEventListener('click', () => {
         const type = element.getAttribute('data-type');
         filterPinsByType(type);
     });
 });
 
-// Écouter le clic sur "Tout"
+// Écoute le clic sur "Tout"
 showAllButton.addEventListener('click', () => {
     showAllPins();
 });
