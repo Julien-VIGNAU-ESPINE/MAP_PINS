@@ -234,5 +234,4 @@ showAllButton.addEventListener('click', () => {
 // ===================================================================
 
 // Charge les pins depuis Firebase au lancement
-
 loadPinsFromFirebase();
