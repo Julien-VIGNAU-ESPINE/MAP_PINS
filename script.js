@@ -2,15 +2,17 @@
 // ÉTAPE 1: CONFIGURATION DE FIREBASE
 // ===================================================================
 
-// REMPLACE CECI PAR TES NOUVELLES CLÉS (après les avoir régénérées!)
+// COLLE ICI TON OBJET firebaseConfig 
 const firebaseConfig = {
-    apiKey: "TES_NOUVELLES_INFOS_ICI",
-    authDomain: "TES_NOUVELLES_INFOS_ICI",
-    projectId: "TES_NOUVELLES_INFOS_ICI",
-    storageBucket: "TES_NOUVELLES_INFOS_ICI",
-    messagingSenderId: "TES_NOUVELLES_INFOS_ICI",
-    appId: "TES_NOUVELLES_INFOS_ICI"
+    apiKey: "AIzaSyAwTF5Gg7CtH-gC5wbuAwHYieA5s0o-lzA",
+  authDomain: "mappins-e290e.firebaseapp.com",
+  projectId: "mappins-e290e",
+  storageBucket: "mappins-e290e.firebasestorage.app",
+  messagingSenderId: "233894828655",
+  appId: "1:233894828655:web:a2319daa2343d178e9cb9a",
+  measurementId: "G-W8LGBXGSR6"
 };
+
 
 // Initialise Firebase (Version 8)
 firebase.initializeApp(firebaseConfig);
