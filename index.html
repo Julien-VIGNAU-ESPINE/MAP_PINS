@@ -1,35 +1,71 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Ma Carte de Voyage</title>
-    
+
     <!-- Leaflet & Fonts -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
 
     <!-- Map Container -->
     <div id="map"></div>
 
+    <!-- Sidebar (Left Panel) -->
+    <aside id="sidebar" class="sidebar glass-panel closed">
+        <div class="sidebar-header">
+            <h2 class="app-title">MapPins</h2>
+            <div id="mini-stats" class="mini-stats">
+                <!-- Stats injected by JS -->
+                <span>📍 Chargement...</span>
+            </div>
+            <button id="close-sidebar-btn" class="icon-btn mobile-only">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6L6 18M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <div class="search-container">
+            <div class="search-input-wrapper">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="search-icon">
+                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+                    <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <input type="text" id="search-input" placeholder="Rechercher un lieu...">
+            </div>
+        </div>
+
+        <div id="pins-list" class="pins-list">
+            <!-- Pins injected by JS -->
+        </div>
+    </aside>
+
     <!-- UI Overlay Container (Pointer events managed in CSS) -->
     <div class="ui-overlay">
-        
-        <!-- Header / Search Bar Placeholder -->
-        <div class="top-bar glass-panel">
-            <h1 class="app-title">MapPins</h1>
-            <!-- Future: Search bar -->
+
+        <!-- Header / Menu Button -->
+        <div class="top-bar-overlay">
+            <button id="menu-btn" class="glass-btn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12h18M3 6h18M3 18h18" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </button>
         </div>
 
         <!-- Floating Action Button (Add Pin) -->
         <button id="add-pin-btn" class="fab primary-gradient" aria-label="Ajouter un lieu">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 5V19M5 12H19" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 5V19M5 12H19" stroke="white" stroke-width="2.5" stroke-linecap="round"
+                    stroke-linejoin="round" />
             </svg>
         </button>
 
@@ -58,7 +94,7 @@
                     </svg>
                 </button>
             </div>
-            
+
             <form id="pinForm">
                 <div class="input-group">
                     <label for="name">Nom du lieu</label>
@@ -98,7 +134,8 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    
+
     <script src="script.js"></script>
 </body>
+
 </html>

@@ -43,13 +43,16 @@ class DataManager {
     }
 
     async loadPins() {
+        console.log("Loading pins from Firebase...");
         try {
             const snapshot = await this.collection.get();
+            console.log("Snapshot received, size:", snapshot.size);
             this.pins = [];
             snapshot.forEach(doc => {
                 this.pins.push({ id: doc.id, ...doc.data() });
             });
             this.pins.sort((a, b) => new Date(b.date) - new Date(a.date)); // Plus récent d'abord
+            console.log("Pins loaded:", this.pins);
             return this.pins;
         } catch (error) {
             console.error("Error loading pins:", error);
@@ -222,16 +225,133 @@ class UIManager {
 }
 
 // ==========================================
-// 4. MAIN APP
+// 4. SIDEBAR MANAGER
+// ==========================================
+class SidebarManager {
+    constructor(callbacks) {
+        this.callbacks = callbacks; // { onPinClick }
+
+        // Elements
+        this.sidebar = document.getElementById('sidebar');
+        this.menuBtn = document.getElementById('menu-btn');
+        this.closeBtn = document.getElementById('close-sidebar-btn');
+        this.listContainer = document.getElementById('pins-list');
+        this.searchInput = document.getElementById('search-input');
+        this.statsContainer = document.getElementById('mini-stats');
+
+        this.pins = [];
+        this.initListeners();
+    }
+
+    initListeners() {
+        // Toggle Sidebar
+        this.menuBtn.addEventListener('click', () => this.toggle(true));
+        this.closeBtn.addEventListener('click', () => this.toggle(false));
+
+        // Search
+        this.searchInput.addEventListener('input', (e) => {
+            this.filterPins(e.target.value);
+        });
+    }
+
+    toggle(open) {
+        if (open) {
+            this.sidebar.classList.remove('closed');
+        } else {
+            this.sidebar.classList.add('closed');
+        }
+    }
+
+    update(pins) {
+        this.pins = pins;
+        this.renderList(pins);
+        this.updateStats(pins);
+    }
+
+    renderList(pinsToRender) {
+        this.listContainer.innerHTML = '';
+
+        if (pinsToRender.length === 0) {
+            this.listContainer.innerHTML = '<div class="empty-state">Aucun lieu trouvé</div>';
+            return;
+        }
+
+        pinsToRender.forEach(pin => {
+            // Card Element
+            const card = document.createElement('div');
+            card.className = 'pin-card';
+
+            const color = COLORS[pin.type] || COLORS.other;
+
+            card.innerHTML = `
+                <div class="pin-card-header">
+                    <span class="pin-name">${pin.name}</span>
+                    <span class="pin-type-dot" style="background-color: ${color};"></span>
+                </div>
+                <div class="pin-meta">
+                    <span>${new Date(pin.date).toLocaleDateString('fr-FR')}</span>
+                    <span>${pin.type}</span>
+                </div>
+            `;
+
+            card.addEventListener('click', () => {
+                this.callbacks.onPinClick(pin);
+                // Sur mobile, on ferme le menu après le clic
+                if (window.innerWidth < 768) {
+                    this.toggle(false);
+                }
+            });
+
+            this.listContainer.appendChild(card);
+        });
+    }
+
+    updateStats(pins) {
+        const total = pins.length;
+        if (total === 0) {
+            this.statsContainer.innerHTML = `<span>0 lieux</span>`;
+            return;
+        }
+
+        // Trouver la catégorie la plus populaire
+        const counts = {};
+        pins.forEach(p => counts[p.type] = (counts[p.type] || 0) + 1);
+
+        const topType = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+
+        this.statsContainer.innerHTML = `
+            <span>📍 ${total} Lieux</span>
+            <span style="margin-left: 8px; opacity: 0.7;">| Top: ${topType}</span>
+        `;
+    }
+
+    filterPins(query) {
+        const lowerQuery = query.toLowerCase();
+        const filtered = this.pins.filter(pin =>
+            pin.name.toLowerCase().includes(lowerQuery) ||
+            pin.description.toLowerCase().includes(lowerQuery) ||
+            pin.type.includes(lowerQuery)
+        );
+        this.renderList(filtered);
+    }
+}
+
+// ==========================================
+// 5. MAIN APP
 // ==========================================
 class App {
     constructor() {
         this.dataManager = new DataManager();
         this.mapManager = new MapManager('map', (latlng) => this.handleMapClick(latlng));
+
         this.uiManager = new UIManager({
             onSubmit: (data) => this.handleFormSubmit(data),
             onFilter: (type) => this.handleFilter(type),
             onCancel: () => this.currentLatLng = null
+        });
+
+        this.sidebarManager = new SidebarManager({
+            onPinClick: (pin) => this.handleSidebarClick(pin)
         });
 
         this.currentLatLng = null; // Position temporaire pour le nouveau pin
@@ -242,12 +362,23 @@ class App {
     async init() {
         const pins = await this.dataManager.loadPins();
         this.mapManager.displayPins(pins);
+        this.sidebarManager.update(pins); // Initialise la sidebar
     }
 
     handleMapClick(latlng) {
         this.currentLatLng = latlng;
         this.mapManager.setTempMarker(latlng);
         this.uiManager.openModal();
+    }
+
+    handleSidebarClick(pin) {
+        this.mapManager.map.flyTo([pin.lat, pin.lon], 16, {
+            animate: true,
+            duration: 1.5
+        });
+
+        // Optionnel : Ouvrir la popup du marqueur correspondant
+        // (Nécessite de stocker une ref vers les markers dans MapManager)
     }
 
     async handleFormSubmit(formData) {
@@ -259,16 +390,16 @@ class App {
             lon: this.currentLatLng.lng
         };
 
-        await this.dataManager.addPin(newPin);
+        const addedPin = await this.dataManager.addPin(newPin); // Wait to get the new pin object
 
         // Refresh
         this.mapManager.clearTempMarker();
         this.uiManager.closeModal();
 
-        // On force le filtre sur 'all' ou on recharge juste la vue actuelle
-        // Pour faire simple, on recharge 'all' pour voir le nouveau pin
+        // Update all views
         const allPins = this.dataManager.getFilteredPins('all');
         this.mapManager.displayPins(allPins);
+        this.sidebarManager.update(allPins); // Update sidebar list & stats
 
         // Reset state
         this.currentLatLng = null;
@@ -277,6 +408,7 @@ class App {
     handleFilter(type) {
         const filtered = this.dataManager.getFilteredPins(type);
         this.mapManager.displayPins(filtered);
+        this.sidebarManager.renderList(filtered); // Update sidebar list to match filter
     }
 }
 
