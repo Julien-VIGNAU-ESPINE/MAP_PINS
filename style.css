@@ -1,31 +1,37 @@
 /* =========================================
-   1. VARIABLES & RESET
+   1. VARIABLES & RESET (LIQUID GLASS)
    ========================================= */
 :root {
-    --primary-color: #6366f1;
-    /* Indigo */
-    --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-    --secondary-color: #ec4899;
-    /* Pink */
+    /* Liquid Palette */
+    --bg-app: #f0f4f8;
+    /* Soft Blue-Grey */
+    --bg-glass: rgba(255, 255, 255, 0.65);
+    /* High transparency */
+    --bg-glass-strong: rgba(255, 255, 255, 0.85);
 
-    /* Text Colors */
-    --text-main: #1e293b;
+    --border-glass: rgba(255, 255, 255, 0.9);
+
+    /* Gradients */
+    --primary-gradient: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+    --accent-gradient: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+
+    --primary-color: #0072ff;
+    --text-main: #334155;
     --text-muted: #64748b;
-    --text-light: #f8fafc;
+    --text-light: #ffffff;
 
-    /* Backgrounds */
-    --bg-glass: rgba(255, 255, 255, 0.75);
-    --border-glass: rgba(255, 255, 255, 0.4);
-    --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    /* Fonts */
+    --font-heading: 'Inter', sans-serif;
+    --font-body: 'Inter', sans-serif;
 
-    /* Spacing & Radius */
+    /* Shapes */
     --radius-lg: 24px;
-    --radius-md: 16px;
-    --radius-sm: 8px;
+    --radius-pill: 50px;
 
-    /* Transition */
-    --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-bounce: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* Effects */
+    --shadow-liquid: 0 8px 32px rgba(31, 38, 135, 0.15);
+    --shadow-float: 0 10px 25px rgba(0, 114, 255, 0.25);
+    --blur-strength: 16px;
 }
 
 * {
@@ -36,15 +42,14 @@
 body {
     margin: 0;
     padding: 0;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: var(--font-body);
     color: var(--text-main);
-    background-color: #eef2f6;
+    background-color: var(--bg-app);
     overflow: hidden;
-    /* Prevent body scroll */
 }
 
 /* =========================================
-   2. MAP & LAYOUT
+   2. MAP
    ========================================= */
 #map {
     width: 100vw;
@@ -60,470 +65,207 @@ body {
     height: 100%;
     z-index: 1000;
     pointer-events: none;
-    /* Let clicks pass through to map */
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
 }
 
-/* Enable pointer events only on direct children of overlay */
 .ui-overlay>* {
     pointer-events: auto;
 }
 
 /* =========================================
-   3. COMPONENTS
-   ========================================= */
-
-/* --- Glass Panel --- */
-.glass-panel {
-    background: var(--bg-glass);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--border-glass);
-    box-shadow: var(--shadow-glass);
-}
-
-/* --- Top Bar --- */
-.top-bar {
-    margin: 16px;
-    padding: 12px 20px;
-    border-radius: var(--radius-lg);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    max-width: 400px;
-    align-self: center;
-    /* Center horizontally */
-}
-
-.app-title {
-    margin: 0;
-    font-size: 1.2rem;
-    font-weight: 700;
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: -0.5px;
-}
-
-/* --- FAB (Floating Action Button) --- */
-.fab {
-    position: absolute;
-    bottom: 100px;
-    right: 20px;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    border: none;
-    background: var(--primary-gradient);
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform var(--transition-bounce);
-    z-index: 1001;
-}
-
-.fab:active {
-    transform: scale(0.9);
-}
-
-/* --- Legend / Bottom Panel --- */
-.bottom-panel {
-    width: 100%;
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    padding: 16px 0;
-    background: rgba(255, 255, 255, 0.85);
-    /* Slightly more opaque */
-    transition: transform 0.3s ease;
-}
-
-.panel-handle {
-    width: 40px;
-    height: 4px;
-    background-color: #cbd5e1;
-    border-radius: 2px;
-    margin: 0 auto 12px;
-}
-
-.filter-scroll {
-    display: flex;
-    overflow-x: auto;
-    padding: 0 20px;
-    gap: 10px;
-    scrollbar-width: none;
-    /* Hide scrollbar Firefox */
-}
-
-.filter-scroll::-webkit-scrollbar {
-    display: none;
-    /* Hide scrollbar Chrome/Safari */
-}
-
-.filter-chip {
-    padding: 8px 16px;
-    border-radius: 20px;
-    border: 1px solid transparent;
-    background: rgba(255, 255, 255, 0.6);
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--text-muted);
-    white-space: nowrap;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.filter-chip.active {
-    background: var(--text-main);
-    color: white;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-}
-
-/* =========================================
-   4. MODAL & FORM
-   ========================================= */
-.modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.2);
-    /* Dimmed background */
-    backdrop-filter: blur(4px);
-    z-index: 2000;
-    display: flex;
-    align-items: center;
-    /* Center vertically on desktop */
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s;
-}
-
-.modal-backdrop:not(.hidden) {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.modal {
-    width: 90%;
-    max-width: 400px;
-    padding: 24px;
-    border-radius: var(--radius-lg);
-    background: white;
-    /* Solid background for legibility */
-    transform: translateY(20px);
-    transition: transform 0.3s ease-out;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-}
-
-.modal-backdrop:not(.hidden) .modal {
-    transform: translateY(0);
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-}
-
-.modal-header h2 {
-    margin: 0;
-    font-size: 1.5rem;
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.close-btn {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 50%;
-    transition: background 0.2s;
-}
-
-.close-btn:hover {
-    background: #f1f5f9;
-}
-
-/* Form Elements */
-.input-group {
-    margin-bottom: 16px;
-}
-
-.input-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.input-group input,
-.input-group select,
-.input-group textarea {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #e2e8f0;
-    border-radius: var(--radius-sm);
-    background: #f8fafc;
-    font-size: 1rem;
-    color: var(--text-main);
-    font-family: inherit;
-    transition: border-color 0.2s;
-}
-
-.input-group input:focus,
-.input-group select:focus,
-.input-group textarea:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    background: white;
-}
-
-.submit-btn {
-    width: 100%;
-    padding: 16px;
-    border: none;
-    border-radius: var(--radius-md);
-    background: var(--primary-gradient);
-    color: white;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-    transition: transform 0.2s;
-}
-
-.submit-btn:active {
-    transform: scale(0.98);
-}
-
-/* =========================================
-   5. RESPONSIVE
-   ========================================= */
-@media (min-width: 768px) {
-    .bottom-panel {
-        position: absolute;
-        bottom: 20px;
-        left: 20px;
-        /* Sidebar width + gap when open, handled by JS class or just push it */
-        /* For now simple positioning */
-        width: auto;
-        border-radius: var(--radius-lg);
-        background: var(--bg-glass);
-        z-index: 1002;
-    }
-
-    .fab {
-        right: 40px;
-        bottom: 40px;
-    }
-
-    /* Sidebar on Desktop */
-    .sidebar {
-        transform: translateX(0);
-        /* Always open on desktop by default? Or toggleable */
-        width: 350px;
-    }
-
-    .sidebar.closed {
-        transform: translateX(-110%);
-    }
-
-    /* Push map controls if needed, but overlay is fine */
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* =========================================
-   6. SIDEBAR STYLES
+   3. SIDEBAR (FLOATING GLASS)
    ========================================= */
 .sidebar {
     position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 320px;
-    /* Base width */
-    max-width: 85vw;
+    top: 20px;
+    left: 20px;
+    bottom: 20px;
+    width: 380px;
+    max-width: 90vw;
     z-index: 1100;
-    padding: 24px;
+    background: var(--bg-glass);
+    backdrop-filter: blur(var(--blur-strength));
+    -webkit-backdrop-filter: blur(var(--blur-strength));
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-liquid);
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
-    border-right: 1px solid var(--border-glass);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .sidebar.closed {
-    transform: translateX(-100%);
-    box-shadow: none;
+    transform: translateX(-150%);
 }
 
-/* Header */
 .sidebar-header {
+    padding: 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+}
+
+.app-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
+    letter-spacing: -1px;
 }
 
 .mini-stats {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     color: var(--text-muted);
     font-weight: 500;
+    background: rgba(255, 255, 255, 0.5);
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
 }
 
-.mobile-only {
+/* Utility Area */
+.sidebar-utils {
+    padding: 0 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Filters Chips */
+.category-filters {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    /* Scrollbar space */
+    scrollbar-width: none;
+}
+
+.category-filters::-webkit-scrollbar {
     display: none;
 }
 
-@media (max-width: 767px) {
-    .mobile-only {
-        display: block;
-    }
-}
-
-/* Icon Button */
-.glass-btn,
-.icon-btn {
-    background: var(--bg-glass);
-    border: 1px solid var(--border-glass);
-    border-radius: 12px;
-    padding: 10px;
+.filter-chip {
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    border: 1px solid white;
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
     cursor: pointer;
-    color: var(--text-main);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    transition: all 0.2s;
+    white-space: nowrap;
+    transition: all 0.2s ease;
 }
 
-.glass-btn:active,
-.icon-btn:active {
+.filter-chip.active {
+    background: var(--primary-gradient);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(0, 114, 255, 0.3);
+}
+
+/* Action Buttons */
+.action-row {
+    display: flex;
+    gap: 12px;
+}
+
+.liquid-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 16px;
+    background: white;
+    color: var(--text-main);
+    font-weight: 700;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.liquid-btn.primary {
+    background: var(--primary-gradient);
+    color: white;
+    box-shadow: var(--shadow-float);
+}
+
+.liquid-btn:active {
     transform: scale(0.95);
 }
 
-.top-bar-overlay {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    z-index: 1090;
-    /* Below sidebar */
-}
-
 /* Search */
-.search-container {
-    margin-bottom: 20px;
-}
-
 .search-input-wrapper {
     position: relative;
-    width: 100%;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    padding: 4px;
 }
 
 .search-input-wrapper input {
     width: 100%;
-    padding: 12px 12px 12px 44px;
-    border: 1px solid transparent;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.8);
-    font-family: inherit;
+    padding: 10px 10px 10px 40px;
+    border: none;
+    background: transparent;
     font-size: 0.95rem;
-    transition: all 0.2s;
+    font-family: inherit;
+    color: var(--text-main);
 }
 
 .search-input-wrapper input:focus {
     outline: none;
-    background: white;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .search-icon {
     position: absolute;
-    left: 12px;
+    left: 14px;
     top: 50%;
     transform: translateY(-50%);
-    color: var(--text-muted);
-    pointer-events: none;
+    color: #cbd5e1;
 }
 
 /* Pins List */
 .pins-list {
     flex: 1;
     overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding-right: 4px;
-    /* Space for scrollbar */
+    padding: 0 16px 16px;
 }
 
-/* Custom Scrollbar */
-.pins-list::-webkit-scrollbar {
-    width: 6px;
+.list-group-header {
+    margin: 16px 8px 8px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.7;
 }
 
-.pins-list::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.pins-list::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.1);
-    border-radius: 3px;
-}
-
-/* Pin Card */
 .pin-card {
-    background: rgba(255, 255, 255, 0.6);
-    border: 1px solid transparent;
-    border-radius: 16px;
-    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 20px;
+    padding: 16px;
+    margin-bottom: 8px;
     cursor: pointer;
     transition: all 0.2s;
+    border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
 .pin-card:hover {
     background: white;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.pin-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 4px;
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
 }
 
 .pin-name {
-    font-weight: 600;
-    font-size: 1rem;
+    font-weight: 700;
     color: var(--text-main);
-}
-
-.pin-type-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+    display: block;
+    margin-bottom: 4px;
 }
 
 .pin-meta {
@@ -533,123 +275,117 @@ body {
     justify-content: space-between;
 }
 
-/* Sidebar Actions */
-.sidebar-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.action-btn {
-    width: 100%;
-    padding: 12px;
-    border: none;
-    border-radius: var(--radius-sm);
-    background: var(--primary-gradient);
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
-    transition: transform 0.2s;
-}
-
-.action-btn:active {
-    transform: scale(0.98);
-}
-
-.action-row {
-    display: flex;
-    gap: 10px;
-}
-
-.small-btn {
-    flex: 1;
-    padding: 8px;
-    border: 1px solid var(--border-glass);
-    background: rgba(255, 255, 255, 0.5);
-    border-radius: 8px;
-    font-size: 0.85rem;
-    cursor: pointer;
-    color: var(--text-muted);
-    transition: all 0.2s;
-}
-
-.small-btn:hover,
-.small-btn.active {
-    background: white;
-    color: var(--primary-color);
-    border-color: var(--primary-color);
-}
-
-/* Group Headers in List */
-.list-group-header {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 16px 0 8px 4px;
-    position: sticky;
-    top: 0;
-    background: rgba(255, 255, 255, 0.95);
-    padding: 4px 0;
+/* =========================================
+   4. UI ELEMENTS
+   ========================================= */
+/* Menu Button (Mobile) */
+.menu-btn-container {
+    position: absolute;
+    top: 20px;
+    left: 20px;
     z-index: 10;
 }
 
+.glass-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+/* FAB */
+.fab {
+    position: absolute;
+    bottom: 30px;
+    right: 30px;
+    width: 64px;
+    height: 64px;
+    border-radius: 24px;
+    /* Squircle */
+    background: var(--primary-gradient);
+    box-shadow: var(--shadow-float);
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 1002;
+}
+
+.fab:hover {
+    transform: scale(1.1) rotate(90deg);
+}
 
 /* =========================================
-   7. DASHBOARD OVERLAY
+   5. DASHBOARD & MODAL
    ========================================= */
-.dashboard-overlay {
+.dashboard-overlay,
+.modal-backdrop {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(10px);
     z-index: 2000;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s;
 }
 
-.dashboard-overlay:not(.hidden) {
+.dashboard-overlay:not(.hidden),
+.modal-backdrop:not(.hidden) {
     opacity: 1;
     pointer-events: auto;
 }
 
-.dashboard-content {
-    width: 100%;
-    max-width: 1000px;
-    height: 85vh;
-    background: #f8fafc;
-    /* Solid for charts visibility */
-    display: flex;
-    flex-direction: column;
-    border-radius: var(--radius-lg);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+.dashboard-content,
+.modal {
+    background: white;
+    border-radius: 32px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
     overflow: hidden;
 }
 
-.dashboard-header {
+.dashboard-content {
+    width: 90%;
+    max-width: 1100px;
+    height: 85vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal {
+    width: 90%;
+    max-width: 400px;
+    padding: 0;
+}
+
+.dashboard-header,
+.modal-header {
     padding: 24px;
-    border-bottom: 1px solid #e2e8f0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: white;
+    border-bottom: 1px solid #f1f5f9;
 }
 
-.dashboard-header h2 {
+.modal-header h2 {
+    font-size: 1.2rem;
     margin: 0;
-    font-size: 1.5rem;
-    color: var(--text-main);
 }
 
 .charts-grid {
@@ -659,26 +395,102 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 24px;
+    background: #f8fafc;
 }
 
 .chart-card {
     background: white;
+    border-radius: 24px;
     padding: 20px;
-    border-radius: var(--radius-md);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+}
+
+.close-btn {
+    background: #f1f5f9;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Form Styles */
+form {
+    padding: 24px;
     display: flex;
     flex-direction: column;
+    gap: 16px;
 }
 
-.chart-card h3 {
-    margin: 0 0 16px 0;
-    font-size: 1rem;
+.input-group label {
+    font-size: 0.8rem;
+    font-weight: 700;
     color: var(--text-muted);
+    margin-bottom: 8px;
+    display: block;
 }
 
-.chart-wrapper {
-    position: relative;
-    flex: 1;
-    min-height: 250px;
+.input-group input,
+.input-group select,
+.input-group textarea {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: 2px solid #f1f5f9;
+    background: #f8fafc;
+    font-family: inherit;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.input-group input:focus {
+    border-color: var(--primary-color);
+    background: white;
+    outline: none;
+}
+
+.submit-btn {
+    padding: 16px;
+    border-radius: 16px;
+    border: none;
+    background: var(--primary-gradient);
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--shadow-float);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        height: 60%;
+        top: auto;
+        bottom: 0px;
+        left: 0;
+        border-radius: 32px 32px 0 0;
+        border: none;
+        transition: transform 0.3s;
+    }
+
+    .sidebar.closed {
+        transform: translateY(100%);
+    }
+
+    .menu-btn-container {
+        display: block;
+    }
+}
+
+@media (min-width: 769px) {
+    .menu-btn-container {
+        display: none;
+    }
+}
+
+.hidden {
+    display: none !important;
 }

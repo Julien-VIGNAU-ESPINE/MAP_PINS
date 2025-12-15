@@ -8,7 +8,11 @@
 
     <!-- Leaflet & Fonts -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css" />
@@ -38,14 +42,18 @@
         </div>
 
         <!-- Sidebar Actions -->
-        <div class="sidebar-actions">
-            <button id="btn-dashboard" class="action-btn">
-                📊 Temps & Stats
-            </button>
+        <div class="sidebar-utils">
             <div class="action-row">
-                <button id="btn-export" class="small-btn" title="Exporter les données">💾 JSON</button>
-                <button id="btn-sort-date" class="small-btn active" title="Trier par Date">📅 Date</button>
-                <!-- <button id="btn-sort-dist" class="small-btn" title="Trier par Distance">📍 Dist</button> -->
+                <button id="btn-dashboard" class="liquid-btn primary">
+                    📊 Stats
+                </button>
+                <button id="btn-export" class="liquid-btn" title="Exporter">
+                    💾 Export
+                </button>
+            </div>
+            <!-- Category Filters (New) -->
+            <div id="category-filters" class="category-filters">
+                <!-- Chips injected by JS -->
             </div>
         </div>
 
