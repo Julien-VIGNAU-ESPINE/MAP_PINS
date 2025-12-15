@@ -16,6 +16,9 @@
 
 <body>
 
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <!-- Map Container -->
     <div id="map"></div>
 
@@ -34,13 +37,25 @@
             </button>
         </div>
 
+        <!-- Sidebar Actions -->
+        <div class="sidebar-actions">
+            <button id="btn-dashboard" class="action-btn">
+                📊 Temps & Stats
+            </button>
+            <div class="action-row">
+                <button id="btn-export" class="small-btn" title="Exporter les données">💾 JSON</button>
+                <button id="btn-sort-date" class="small-btn active" title="Trier par Date">📅 Date</button>
+                <!-- <button id="btn-sort-dist" class="small-btn" title="Trier par Distance">📍 Dist</button> -->
+            </div>
+        </div>
+
         <div class="search-container">
             <div class="search-input-wrapper">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="search-icon">
                     <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
                     <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                 </svg>
-                <input type="text" id="search-input" placeholder="Rechercher un lieu...">
+                <input type="text" id="search-input" placeholder="Rechercher...">
             </div>
         </div>
 
@@ -59,6 +74,42 @@
                     <path d="M3 12h18M3 6h18M3 18h18" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
             </button>
+        </div>
+
+        <!-- Analytics Dashboard Overlay -->
+        <div id="dashboard-overlay" class="dashboard-overlay hidden">
+            <div class="dashboard-content glass-panel">
+                <div class="dashboard-header">
+                    <h2>Analyse de vos Voyages</h2>
+                    <button id="close-dashboard" class="close-btn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M18 6L6 18M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3>Répartition par Catégorie</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-categories"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Chronologie des Visites</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-timeline"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Jours de Sortie</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-days"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Floating Action Button (Add Pin) -->

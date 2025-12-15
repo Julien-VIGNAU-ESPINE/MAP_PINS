@@ -225,11 +225,11 @@ class UIManager {
 }
 
 // ==========================================
-// 4. SIDEBAR MANAGER
+// 4. SIDEBAR MANAGER POWER UP 🚀
 // ==========================================
 class SidebarManager {
     constructor(callbacks) {
-        this.callbacks = callbacks; // { onPinClick }
+        this.callbacks = callbacks; // { onPinClick, onExport, onOpenDashboard }
 
         // Elements
         this.sidebar = document.getElementById('sidebar');
@@ -239,19 +239,25 @@ class SidebarManager {
         this.searchInput = document.getElementById('search-input');
         this.statsContainer = document.getElementById('mini-stats');
 
+        // Buttons actions
+        this.btnExport = document.getElementById('btn-export');
+        this.btnDashboard = document.getElementById('btn-dashboard');
+
         this.pins = [];
         this.initListeners();
     }
 
     initListeners() {
-        // Toggle Sidebar
         this.menuBtn.addEventListener('click', () => this.toggle(true));
         this.closeBtn.addEventListener('click', () => this.toggle(false));
 
-        // Search
         this.searchInput.addEventListener('input', (e) => {
             this.filterPins(e.target.value);
         });
+
+        // Power Features
+        this.btnExport.addEventListener('click', () => this.callbacks.onExport());
+        this.btnDashboard.addEventListener('click', () => this.callbacks.onOpenDashboard());
     }
 
     toggle(open) {
@@ -276,34 +282,60 @@ class SidebarManager {
             return;
         }
 
-        pinsToRender.forEach(pin => {
-            // Card Element
-            const card = document.createElement('div');
-            card.className = 'pin-card';
+        // Group by Month/Year
+        const grouped = this.groupByDate(pinsToRender);
 
-            const color = COLORS[pin.type] || COLORS.other;
+        Object.keys(grouped).forEach(key => {
+            // Header
+            const header = document.createElement('div');
+            header.className = 'list-group-header';
+            header.innerText = key;
+            this.listContainer.appendChild(header);
 
-            card.innerHTML = `
-                <div class="pin-card-header">
-                    <span class="pin-name">${pin.name}</span>
-                    <span class="pin-type-dot" style="background-color: ${color};"></span>
-                </div>
-                <div class="pin-meta">
-                    <span>${new Date(pin.date).toLocaleDateString('fr-FR')}</span>
-                    <span>${pin.type}</span>
-                </div>
-            `;
-
-            card.addEventListener('click', () => {
-                this.callbacks.onPinClick(pin);
-                // Sur mobile, on ferme le menu après le clic
-                if (window.innerWidth < 768) {
-                    this.toggle(false);
-                }
+            // Items
+            grouped[key].forEach(pin => {
+                const card = this.createPinCard(pin);
+                this.listContainer.appendChild(card);
             });
-
-            this.listContainer.appendChild(card);
         });
+    }
+
+    createPinCard(pin) {
+        const card = document.createElement('div');
+        card.className = 'pin-card';
+        const color = COLORS[pin.type] || COLORS.other;
+
+        card.innerHTML = `
+            <div class="pin-card-header">
+                <span class="pin-name">${pin.name}</span>
+                <span class="pin-type-dot" style="background-color: ${color};"></span>
+            </div>
+            <div class="pin-meta">
+                <span>${new Date(pin.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                <span>${pin.type}</span>
+            </div>
+        `;
+
+        card.addEventListener('click', () => {
+            this.callbacks.onPinClick(pin);
+            if (window.innerWidth < 768) this.toggle(false);
+        });
+        return card;
+    }
+
+    groupByDate(pins) {
+        const groups = {};
+        pins.forEach(pin => {
+            const date = new Date(pin.date);
+            // Key format: "Décembre 2024"
+            const key = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+            // Capitalize
+            const formattedKey = key.charAt(0).toUpperCase() + key.slice(1);
+
+            if (!groups[formattedKey]) groups[formattedKey] = [];
+            groups[formattedKey].push(pin);
+        });
+        return groups;
     }
 
     updateStats(pins) {
@@ -312,11 +344,8 @@ class SidebarManager {
             this.statsContainer.innerHTML = `<span>0 lieux</span>`;
             return;
         }
-
-        // Trouver la catégorie la plus populaire
         const counts = {};
         pins.forEach(p => counts[p.type] = (counts[p.type] || 0) + 1);
-
         const topType = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
 
         this.statsContainer.innerHTML = `
@@ -337,7 +366,128 @@ class SidebarManager {
 }
 
 // ==========================================
-// 5. MAIN APP
+// 5. ANALYTICS MANAGER (CHART.JS)
+// ==========================================
+class AnalyticsManager {
+    constructor() {
+        this.overlay = document.getElementById('dashboard-overlay');
+        this.closeBtn = document.getElementById('close-dashboard');
+
+        // Chart Contexts
+        this.ctxCategories = document.getElementById('chart-categories').getContext('2d');
+        this.ctxTimeline = document.getElementById('chart-timeline').getContext('2d');
+        this.ctxDays = document.getElementById('chart-days').getContext('2d');
+
+        this.charts = {}; // Store chart instances
+
+        this.closeBtn.addEventListener('click', () => this.close());
+    }
+
+    open(pins) {
+        this.overlay.classList.remove('hidden');
+        this.renderCharts(pins);
+    }
+
+    close() {
+        this.overlay.classList.add('hidden');
+    }
+
+    renderCharts(pins) {
+        // Prepare Data
+        const categoryData = this.getCategoryData(pins);
+        const timelineData = this.getTimelineData(pins);
+        const daysData = this.getDaysData(pins);
+
+        // Render or Update Charts
+        this.createOrUpdateChart('categories', this.ctxCategories, 'doughnut', categoryData, {
+            plugins: { legend: { position: 'right' } }
+        });
+
+        this.createOrUpdateChart('timeline', this.ctxTimeline, 'bar', timelineData, {
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        });
+
+        this.createOrUpdateChart('days', this.ctxDays, 'polarArea', daysData, {
+            scales: { r: { ticks: { display: false } } }
+        });
+    }
+
+    createOrUpdateChart(key, ctx, type, data, options = {}) {
+        if (this.charts[key]) {
+            this.charts[key].destroy();
+        }
+        this.charts[key] = new Chart(ctx, {
+            type: type,
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                ...options
+            }
+        });
+    }
+
+    getCategoryData(pins) {
+        const counts = {};
+        pins.forEach(p => counts[p.type] = (counts[p.type] || 0) + 1);
+
+        return {
+            labels: Object.keys(counts),
+            datasets: [{
+                data: Object.values(counts),
+                backgroundColor: Object.keys(counts).map(k => COLORS[k] || COLORS.other),
+                borderWidth: 0
+            }]
+        };
+    }
+
+    getTimelineData(pins) {
+        const months = {};
+        pins.forEach(p => {
+            const d = new Date(p.date);
+            const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+            months[key] = (months[key] || 0) + 1;
+        });
+
+        // Sort keys
+        const sortedKeys = Object.keys(months).sort();
+
+        return {
+            labels: sortedKeys,
+            datasets: [{
+                label: 'Visites par Mois',
+                data: sortedKeys.map(k => months[k]),
+                backgroundColor: '#6366f1',
+                borderRadius: 4
+            }]
+        };
+    }
+
+    getDaysData(pins) {
+        const days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+        const counts = new Array(7).fill(0);
+
+        pins.forEach(p => {
+            const dayIndex = new Date(p.date).getDay();
+            counts[dayIndex]++;
+        });
+
+        return {
+            labels: days,
+            datasets: [{
+                label: 'Jours préférés',
+                data: counts,
+                backgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#C9CBCF'
+                ]
+            }]
+        };
+    }
+}
+
+
+// ==========================================
+// 6. MAIN APP
 // ==========================================
 class App {
     constructor() {
@@ -350,8 +500,12 @@ class App {
             onCancel: () => this.currentLatLng = null
         });
 
+        this.analyticsManager = new AnalyticsManager();
+
         this.sidebarManager = new SidebarManager({
-            onPinClick: (pin) => this.handleSidebarClick(pin)
+            onPinClick: (pin) => this.handleSidebarClick(pin),
+            onExport: () => this.exportData(),
+            onOpenDashboard: () => this.openDashboard()
         });
 
         this.currentLatLng = null; // Position temporaire pour le nouveau pin
@@ -363,6 +517,7 @@ class App {
         const pins = await this.dataManager.loadPins();
         this.mapManager.displayPins(pins);
         this.sidebarManager.update(pins); // Initialise la sidebar
+        // No dashboard open by default
     }
 
     handleMapClick(latlng) {
@@ -376,9 +531,23 @@ class App {
             animate: true,
             duration: 1.5
         });
+    }
 
-        // Optionnel : Ouvrir la popup du marqueur correspondant
-        // (Nécessite de stocker une ref vers les markers dans MapManager)
+    exportData() {
+        const dataStr = JSON.stringify(this.dataManager.pins, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `mappins_backup_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    openDashboard() {
+        // Pass current pins to dashboard
+        this.analyticsManager.open(this.dataManager.getFilteredPins('all'));
     }
 
     async handleFormSubmit(formData) {
@@ -390,25 +559,23 @@ class App {
             lon: this.currentLatLng.lng
         };
 
-        const addedPin = await this.dataManager.addPin(newPin); // Wait to get the new pin object
+        await this.dataManager.addPin(newPin);
 
-        // Refresh
+        // Refresh everything
         this.mapManager.clearTempMarker();
         this.uiManager.closeModal();
 
-        // Update all views
         const allPins = this.dataManager.getFilteredPins('all');
         this.mapManager.displayPins(allPins);
-        this.sidebarManager.update(allPins); // Update sidebar list & stats
+        this.sidebarManager.update(allPins);
 
-        // Reset state
         this.currentLatLng = null;
     }
 
     handleFilter(type) {
         const filtered = this.dataManager.getFilteredPins(type);
         this.mapManager.displayPins(filtered);
-        this.sidebarManager.renderList(filtered); // Update sidebar list to match filter
+        this.sidebarManager.renderList(filtered);
     }
 }
 
