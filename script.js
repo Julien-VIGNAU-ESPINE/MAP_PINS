@@ -1,241 +1,286 @@
-// ===================================================================
-// ÉTAPE 1: CONFIGURATION DE FIREBASE
-// ===================================================================
+/**
+ * MAP PINS 2.0 - Core Logic
+ * Structure:
+ * - DataManager: Firebase & Data State
+ * - MapManager: Leaflet Map & Markers
+ * - UIManager: Modal, Buttons, Filters
+ * - App: Coordinator
+ */
 
-// COLLE ICI TON OBJET firebaseConfig 
+// ==========================================
+// CONFIGURATION
+// ==========================================
+// Copie de ton objet config (sécurisé)
 const firebaseConfig = {
     apiKey: "AIzaSyAwTF5Gg7CtH-gC5wbuAwHYieA5s0o-lzA",
-  authDomain: "mappins-e290e.firebaseapp.com",
-  projectId: "mappins-e290e",
-  storageBucket: "mappins-e290e.firebasestorage.app",
-  messagingSenderId: "233894828655",
-  appId: "1:233894828655:web:a2319daa2343d178e9cb9a",
-  measurementId: "G-W8LGBXGSR6"
+    authDomain: "mappins-e290e.firebaseapp.com",
+    projectId: "mappins-e290e",
+    storageBucket: "mappins-e290e.firebasestorage.app",
+    messagingSenderId: "233894828655",
+    appId: "1:233894828655:web:a2319daa2343d178e9cb9a",
+    measurementId: "G-W8LGBXGSR6"
 };
 
-
-// Initialise Firebase (Version 8)
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const lieuxCollection = db.collection('lieux'); 
-
-// ===================================================================
-// ÉTAPE 2: VARIABLES GLOBALES ET INITIALISATION
-// ===================================================================
-
-// Références aux éléments du DOM
-const form = document.getElementById('pinForm');
-const formContainer = document.getElementById('form-container');
-const cancelButton = document.getElementById('cancelButton');
-const showAllButton = document.getElementById('show-all');
-
-// Initialise la carte (fond de carte clair)
-const map = L.map('map').setView([48.8566, 2.3522], 5); // Centre sur Paris
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { 
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/">CARTO</a>',
-}).addTo(map);
-
-// Couleurs
-const colorMap = {
-    restaurant: '#780096',
-    bar: '#2300eb',
-    'tourist-site': '#db0202',
-    other: '#e9c600',
-    '18': '#e70074'
+const COLORS = {
+    restaurant: '#6366f1', // Indigo
+    bar: '#ec4899', // Pink
+    'tourist-site': '#10b981', // Emerald
+    '18': '#ef4444', // Red
+    other: '#f59e0b' // Amber
 };
 
-// Variables d'état
-let allPins = []; // Un cache local pour tous les pins de la BDD
-let currentLatLon = null;
-let tempMarker = null;
-
-// ===================================================================
-// ÉTAPE 3: LOGIQUE D'AFFICHAGE DES PINS
-// ===================================================================
-
-// Affiche une liste de pins sur la carte
-function displayPins(pinsToDisplay) {
-    // Vider la carte avant de redessiner
-    map.eachLayer(function (layer) {
-        if (layer instanceof L.CircleMarker) {
-            map.removeLayer(layer);
+// ==========================================
+// 1. DATA MANAGER
+// ==========================================
+class DataManager {
+    constructor() {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
         }
-    });
+        this.db = firebase.firestore();
+        this.collection = this.db.collection('lieux');
+        this.pins = [];
+    }
 
-    pinsToDisplay.forEach(pin => {
-        const color = colorMap[pin.type] || colorMap['other'];
-        
-        const marker = L.circleMarker([pin.lat, pin.lon], {
-            radius: 10,
-            fillColor: color,
-            color: color,
-            weight: 1,
-            opacity: 1,
-            fillOpacity: 0.9
-        }).addTo(map);
+    async loadPins() {
+        try {
+            const snapshot = await this.collection.get();
+            this.pins = [];
+            snapshot.forEach(doc => {
+                this.pins.push({ id: doc.id, ...doc.data() });
+            });
+            this.pins.sort((a, b) => new Date(b.date) - new Date(a.date)); // Plus récent d'abord
+            return this.pins;
+        } catch (error) {
+            console.error("Error loading pins:", error);
+            return [];
+        }
+    }
 
-        // Pop-up
-        marker.bindPopup(`
-            <b>${pin.name}</b><br>
-            Date: ${pin.date}<br>
-            Type: ${pin.type}<br>
-            Description: ${pin.description}<br>
-        `);
-    });
+    async addPin(pinData) {
+        try {
+            const docRef = await this.collection.add(pinData);
+            const newPin = { id: docRef.id, ...pinData };
+            this.pins.push(newPin);
+            return newPin;
+        } catch (error) {
+            console.error("Error adding pin:", error);
+            throw error;
+        }
+    }
+
+    getFilteredPins(type) {
+        if (type === 'all') return this.pins;
+        return this.pins.filter(pin => pin.type === type);
+    }
 }
 
-// Charger les pins initiaux depuis Firebase
-async function loadPinsFromFirebase() {
-    try {
-        const snapshot = await lieuxCollection.get();
-        
-        allPins = []; // Réinitialise le cache local
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            data.id = doc.id; 
-            allPins.push(data);
+// ==========================================
+// 2. MAP MANAGER
+// ==========================================
+class MapManager {
+    constructor(mapId, onMapClick) {
+        this.map = L.map(mapId).setView([48.8566, 2.3522], 13);
+        this.markersLayer = L.layerGroup().addTo(this.map);
+        this.tempLayer = L.layerGroup().addTo(this.map);
+        this.onMapClick = onMapClick;
+
+        this.initMap();
+    }
+
+    initMap() {
+        // Fond de carte clair et moderne (CartoDB Voyager)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(this.map);
+
+        this.map.on('click', (e) => {
+            this.onMapClick(e.latlng);
+        });
+    }
+
+    displayPins(pins) {
+        this.markersLayer.clearLayers();
+
+        pins.forEach(pin => {
+            const color = COLORS[pin.type] || COLORS.other;
+
+            // Marker personnalisé
+            const markerHtml = `
+                <div style="
+                    background-color: ${color};
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 50%;
+                    border: 3px solid white;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+                "></div>
+            `;
+
+            const icon = L.divIcon({
+                className: 'custom-pin',
+                html: markerHtml,
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            });
+
+            const marker = L.marker([pin.lat, pin.lon], { icon }).addTo(this.markersLayer);
+
+            marker.bindPopup(`
+                <div style="font-family: 'Inter', sans-serif;">
+                    <strong style="color: ${color}; font-size: 1.1em;">${pin.name}</strong><br>
+                    <span style="color: #64748b; font-size: 0.9em;">${pin.type} · ${pin.date}</span>
+                    <p style="margin: 8px 0 0; color: #334155;">${pin.description}</p>
+                </div>
+            `);
+        });
+    }
+
+    setTempMarker(latlng) {
+        this.tempLayer.clearLayers();
+        L.circleMarker(latlng, {
+            radius: 8,
+            fillColor: '#ef4444',
+            color: '#fff',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.8
+        }).addTo(this.tempLayer);
+
+        // Animation de zoom sur le point
+        this.map.flyTo(latlng, this.map.getZoom());
+    }
+
+    clearTempMarker() {
+        this.tempLayer.clearLayers();
+    }
+}
+
+// ==========================================
+// 3. UI MANAGER
+// ==========================================
+class UIManager {
+    constructor(callbacks) {
+        this.callbacks = callbacks; // { onSubmit, onFilter }
+
+        // Elements
+        this.modal = document.getElementById('modal-backdrop');
+        this.form = document.getElementById('pinForm');
+        this.addBtn = document.getElementById('add-pin-btn');
+        this.cancelBtn = document.getElementById('cancelButton');
+        this.filters = document.querySelectorAll('.filter-chip');
+
+        this.initListeners();
+    }
+
+    initListeners() {
+        // FAB Button logic (Toggle mode ajout ?)
+        // Pour l'instant, le FAB sert à focaliser sur l'ajout manuel ou géoloc
+        this.addBtn.addEventListener('click', () => {
+            alert('Cliquez sur la carte pour ajouter un lieu !');
         });
 
-        // Trier par date
-        allPins.sort((a, b) => new Date(a.date) - new Date(b.date));
-        
-        // Afficher tous les pins chargés
-        displayPins(allPins);
-        console.log("Pins chargés depuis Firebase !", allPins.length);
-        
-    } catch (error) {
-        console.error("Erreur lors du chargement des pins: ", error);
+        // Fermeture modal
+        this.cancelBtn.addEventListener('click', () => this.closeModal());
+
+        // Soumission
+        this.form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('name').value,
+                type: document.getElementById('type').value,
+                date: document.getElementById('date').value,
+                description: document.getElementById('description').value
+            };
+            this.callbacks.onSubmit(data);
+        });
+
+        // Filtres
+        this.filters.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Update active state
+                this.filters.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const type = btn.getAttribute('data-type');
+                this.callbacks.onFilter(type);
+            });
+        });
+    }
+
+    openModal() {
+        this.modal.classList.remove('hidden');
+    }
+
+    closeModal() {
+        this.modal.classList.add('hidden');
+        this.form.reset();
+        this.callbacks.onCancel(); // Pour nettoyer la map
     }
 }
 
-// ===================================================================
-// ÉTAPE 4: GESTION DU FORMULAIRE ET DES CLICS
-// ===================================================================
+// ==========================================
+// 4. MAIN APP
+// ==========================================
+class App {
+    constructor() {
+        this.dataManager = new DataManager();
+        this.mapManager = new MapManager('map', (latlng) => this.handleMapClick(latlng));
+        this.uiManager = new UIManager({
+            onSubmit: (data) => this.handleFormSubmit(data),
+            onFilter: (type) => this.handleFilter(type),
+            onCancel: () => this.currentLatLng = null
+        });
 
-// Au clic sur la carte
-map.on('click', function (e) {
-    // N'ouvre pas le formulaire si on clique sur un marqueur
-    if (e.originalEvent.target.classList.contains('leaflet-interactive')) {
-        return;
+        this.currentLatLng = null; // Position temporaire pour le nouveau pin
+
+        this.init();
     }
 
-    currentLatLon = e.latlng;
-
-    // Supprime l'ancien marqueur temporaire
-    if (tempMarker) {
-        map.removeLayer(tempMarker);
+    async init() {
+        const pins = await this.dataManager.loadPins();
+        this.mapManager.displayPins(pins);
     }
 
-    // Crée un marqueur temporaire
-    tempMarker = L.circleMarker(currentLatLon, {
-        radius: 8,
-        fillColor: '#FF6347', // Couleur "temporaire"
-        color: '#FF6347',
-        weight: 1,
-        opacity: 1,
-        fillOpacity: 0.7
-    }).addTo(map);
-
-    // Affiche le formulaire
-    formContainer.classList.remove('hidden');
-    
-    // Réinitialise les champs
-    form.reset();
-});
-
-// Soumission du formulaire (logique Firebase)
-form.addEventListener('submit', async (e) => {
-    e.preventDefault(); 
-
-    if (!currentLatLon) {
-        alert('Erreur : emplacement non défini.');
-        return;
+    handleMapClick(latlng) {
+        this.currentLatLng = latlng;
+        this.mapManager.setTempMarker(latlng);
+        this.uiManager.openModal();
     }
 
-    // Crée l'objet "pin"
-    const newPin = {
-        name: document.getElementById('name').value,
-        type: document.getElementById('type').value,
-        description: document.getElementById('description').value,
-        date: document.getElementById('date').value,
-        lat: currentLatLon.lat,
-        lon: currentLatLon.lng 
-    };
+    async handleFormSubmit(formData) {
+        if (!this.currentLatLng) return;
 
-    try {
-        // === ENVOI À FIREBASE ===
-        const docRef = await lieuxCollection.add(newPin);
-        console.log("Pin enregistré dans Firebase avec l'ID: ", docRef.id);
+        const newPin = {
+            ...formData,
+            lat: this.currentLatLng.lat,
+            lon: this.currentLatLng.lng
+        };
 
-        allPins.push(newPin);
-        displayPins(allPins);
-        cacherFormulaire();
+        await this.dataManager.addPin(newPin);
 
-    } catch (error) {
-        console.error("Erreur lors de l'ajout à Firebase: ", error);
-        alert("Une erreur est survenue lors de l'enregistrement.");
+        // Refresh
+        this.mapManager.clearTempMarker();
+        this.uiManager.closeModal();
+
+        // On force le filtre sur 'all' ou on recharge juste la vue actuelle
+        // Pour faire simple, on recharge 'all' pour voir le nouveau pin
+        const allPins = this.dataManager.getFilteredPins('all');
+        this.mapManager.displayPins(allPins);
+
+        // Reset state
+        this.currentLatLng = null;
     }
-});
 
-// Clic sur le bouton "Annuler"
-cancelButton.addEventListener('click', () => {
-    cacherFormulaire();
-});
-
-function cacherFormulaire() {
-    formContainer.classList.add('hidden');
-    currentLatLon = null;
-    if (tempMarker) {
-        map.removeLayer(tempMarker);
-        tempMarker = null;
+    handleFilter(type) {
+        const filtered = this.dataManager.getFilteredPins(type);
+        this.mapManager.displayPins(filtered);
     }
 }
 
-// ===================================================================
-// ÉTAPE 5: GESTION DES FILTRES ET DU VOLET
-// ===================================================================
-
-// --- GESTION DU VOLET DE LÉGENDE ---
-const legendContainer = document.getElementById('legend-container');
-const legendHandle = document.getElementById('legend-handle');
-
-// Ferme le volet par défaut au chargement
-legendContainer.classList.add('closed');
-
-// Ajoute l'événement de clic sur la poignée
-legendHandle.addEventListener('click', () => {
-    legendContainer.classList.toggle('closed');
+// Start App
+document.addEventListener('DOMContentLoaded', () => {
+    window.app = new App();
 });
-// --- FIN DU BLOC VOLET ---
-
-
-// Fonctions de filtre
-function filterPinsByType(type) {
-    const filteredPins = allPins.filter(pin => pin.type === type);
-    displayPins(filteredPins);
-}
-
-function showAllPins() {
-    displayPins(allPins);
-}
-
-// Écoute les clics sur les catégories (dans le bon conteneur)
-document.querySelectorAll('#legend-content div[data-type]').forEach(element => {
-    element.addEventListener('click', () => {
-        const type = element.getAttribute('data-type');
-        filterPinsByType(type);
-    });
-});
-
-// Écoute le clic sur "Tout"
-showAllButton.addEventListener('click', () => {
-    showAllPins();
-});
-
-
-// ===================================================================
-// ÉTAPE 6: DÉMARRAGE
-// ===================================================================
-
-// Charge les pins depuis Firebase au lancement
-loadPinsFromFirebase();

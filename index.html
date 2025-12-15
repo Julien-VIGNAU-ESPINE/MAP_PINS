@@ -1,84 +1,104 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Ma Carte de Voyage</title>
-
+    
+    <!-- Leaflet & Fonts -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
 
+    <!-- Map Container -->
     <div id="map"></div>
 
-    <div id="form-container" class="hidden">
-        <form id="pinForm">
-            <h3>Ajouter un lieu</h3>
-            <label for="name">Nom :</label>
-            <input type="text" id="name" required>
-            <br>
-            <label for="type">Type :</label>
-            <select id="type" required>
-                <option value="restaurant">Restaurant</option>
-                <option value="bar">Bar</option>
-                <option value="tourist-site">Site touristique</option>
-                <option value="other">Autre</option>
-                <option value="18">+18</option>
-            </select>
-            <br>
-            <label for="description">Description :</label>
-            <textarea id="description" required></textarea>
-            <br>
-            <label for="date">Date :</label>
-            <input type="date" id="date" required>
-            <br>
-            <div class="form-buttons">
-                <button type="submit">Ajouter</button>
-                <button type="button" id="cancelButton">Annuler</button>
-            </div>
-        </form>
-    </div>
-
-    <div class="legend-container" id="legend-container">
-
-        <div class="legend-handle" id="legend-handle">
-            <span>Catégories</span>
-            <span class="arrow">▲</span>
+    <!-- UI Overlay Container (Pointer events managed in CSS) -->
+    <div class="ui-overlay">
+        
+        <!-- Header / Search Bar Placeholder -->
+        <div class="top-bar glass-panel">
+            <h1 class="app-title">MapPins</h1>
+            <!-- Future: Search bar -->
         </div>
 
-        <div class="legend" id="legend-content">
-            <div data-type="restaurant">
-                <span style="background-color: #780096;"></span> Restaurant
-            </div>
-            <div data-type="bar">
-                <span style="background-color: #2300eb;"></span> Bar
-            </div>
-            <div data-type="tourist-site">
-                <span style="background-color: #db0202;"></span> Tourisme
-            </div>
-            <div data-type="other">
-                <span style="background-color: #e9c600;"></span> Autre
-            </div>
-            <div data-type="18">
-                <span style="background-color: #e70074;"></span> +18
-            </div>
-            <div id="show-all-container">
-                <div id="show-all"></div>
-                <span>Tout</span>
+        <!-- Floating Action Button (Add Pin) -->
+        <button id="add-pin-btn" class="fab primary-gradient" aria-label="Ajouter un lieu">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 5V19M5 12H19" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+
+        <!-- Legend / Filter Panel -->
+        <div class="bottom-panel glass-panel" id="legend-panel">
+            <div class="panel-handle"></div>
+            <div class="filter-scroll">
+                <button class="filter-chip active" data-type="all">Tout</button>
+                <button class="filter-chip" data-type="restaurant">🍕 Resto</button>
+                <button class="filter-chip" data-type="bar">🍺 Bar</button>
+                <button class="filter-chip" data-type="tourist-site">📷 Tourisme</button>
+                <button class="filter-chip" data-type="18">🔞 +18</button>
+                <button class="filter-chip" data-type="other">📍 Autre</button>
             </div>
         </div>
     </div>
+
+    <!-- Modal Form (Hidden by default) -->
+    <div class="modal-backdrop hidden" id="modal-backdrop">
+        <div class="modal glass-panel">
+            <div class="modal-header">
+                <h2>Nouveau Lieu</h2>
+                <button type="button" class="close-btn" id="cancelButton">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="pinForm">
+                <div class="input-group">
+                    <label for="name">Nom du lieu</label>
+                    <input type="text" id="name" placeholder="Ex: Tour Eiffel" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="type">Catégorie</label>
+                    <div class="select-wrapper">
+                        <select id="type" required>
+                            <option value="restaurant">🍕 Restaurant</option>
+                            <option value="bar">🍺 Bar</option>
+                            <option value="tourist-site">📷 Site Touristique</option>
+                            <option value="18">🔞 Adulte (+18)</option>
+                            <option value="other">📍 Autre</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="date">Date de visite</label>
+                    <input type="date" id="date" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="description">Note / Description</label>
+                    <textarea id="description" rows="3" placeholder="C'était comment ?"></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn primary-gradient">Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
     <script src="script.js"></script>
-
 </body>
-
 </html>

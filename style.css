@@ -1,235 +1,336 @@
-/* Style de base (thème clair) */
+/* =========================================
+   1. VARIABLES & RESET
+   ========================================= */
+:root {
+    --primary-color: #6366f1;
+    /* Indigo */
+    --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    --secondary-color: #ec4899;
+    /* Pink */
+
+    /* Text Colors */
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --text-light: #f8fafc;
+
+    /* Backgrounds */
+    --bg-glass: rgba(255, 255, 255, 0.75);
+    --border-glass: rgba(255, 255, 255, 0.4);
+    --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+
+    /* Spacing & Radius */
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --radius-sm: 8px;
+
+    /* Transition */
+    --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
 body {
     margin: 0;
     padding: 0;
-    background-color: #f4f4f4;
-    font-family: 'Roboto', sans-serif;
-    color: #333;
-    /* Empêche le zoom auto sur iOS quand on clique sur un champ */
-    font-size: 16px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text-main);
+    background-color: #eef2f6;
+    overflow: hidden;
+    /* Prevent body scroll */
 }
 
+/* =========================================
+   2. MAP & LAYOUT
+   ========================================= */
 #map {
+    width: 100vw;
     height: 100vh;
-    width: 100%;
+    z-index: 1;
 }
 
-/* ======================================= */
-/* === SECTION MODIFIÉE POUR RESPONSIVE === */
-/* ======================================= */
-
-/* Conteneur du formulaire (thème clair) */
-#form-container {
-    background-color: #ffffff;
-    padding: 20px;
-    border-radius: 8px;
+.ui-overlay {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1001;
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
-
-    /* MODIFICATION ICI : plus de largeur fixe */
-    width: 90%;
-    /* Prend 90% de la largeur de l'écran */
-    max-width: 380px;
-    /* Mais ne dépasse pas 380px sur desktop */
-    box-sizing: border-box;
-    /* Inclut le padding dans la largeur */
-}
-
-.hidden {
-    display: none;
-}
-
-/* Style du formulaire */
-form {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    pointer-events: none;
+    /* Let clicks pass through to map */
     display: flex;
     flex-direction: column;
-    gap: 10px;
-}
-
-form h3 {
-    text-align: center;
-    margin-top: 0;
-    color: #333;
-}
-
-form label {
-    font-weight: 500;
-    color: #555;
-}
-
-form input,
-form select,
-form textarea {
-    width: 100%;
-    padding: 10px;
-    /* Un peu plus grand pour les doigts */
-    border: 1px solid #ccc;
-    background-color: #f9f9f9;
-    color: #333;
-    border-radius: 4px;
-    box-sizing: border-box;
-    font-size: 1em;
-    /* Hérite du 16px du body */
-}
-
-form .form-buttons {
-    display: flex;
     justify-content: space-between;
-    gap: 10px;
-    margin-top: 10px;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
 }
 
-form button {
-    padding: 12px;
-    /* Plus gros pour les doigts */
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    flex: 1;
+/* Enable pointer events only on direct children of overlay */
+.ui-overlay>* {
+    pointer-events: auto;
 }
 
-form button[type="submit"] {
-    background-color: #1E90FF;
-    color: white;
+/* =========================================
+   3. COMPONENTS
+   ========================================= */
+
+/* --- Glass Panel --- */
+.glass-panel {
+    background: var(--bg-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-glass);
+    box-shadow: var(--shadow-glass);
 }
 
-form button#cancelButton {
-    background-color: #ddd;
-    color: #333;
-}
-
-
-/* ======================================= */
-/* === SECTION MODIFIÉE POUR RESPONSIVE === */
-/* ======================================= */
-
-/* Conteneur du volet */
-.legend-container {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    /* Aligné à gauche */
-    right: 0;
-    /* Aligné à droite */
-    margin-left: auto;
-    /* Centrage */
-    margin-right: auto;
-    /* Centrage */
-
-    /* MODIFICATION ICI : plus de 90% */
-    width: 100%;
-    /* Prend toute la largeur sur mobile */
-    max-width: 600px;
-    /* Limité sur desktop */
-
-    z-index: 1000;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.15);
-    border-radius: 8px 8px 0 0;
-    overflow: hidden;
-}
-
-/* Poignée cliquable */
-.legend-handle {
-    background-color: #ffffff;
-    color: #333;
-    padding: 14px 20px;
-    /* Plus haut pour les doigts */
-    text-align: center;
-    cursor: pointer;
-    font-weight: 500;
-    border-bottom: 1px solid #eee;
+/* --- Top Bar --- */
+.top-bar {
+    margin: 16px;
+    padding: 12px 20px;
+    border-radius: var(--radius-lg);
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+    max-width: 400px;
+    align-self: center;
+    /* Center horizontally */
 }
 
-.legend-handle:hover {
-    background-color: #f9f9f9;
+.app-title {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
 }
 
-.legend-handle .arrow {
-    font-size: 12px;
-    transition: transform 0.3s ease-out;
-    transform: rotate(0deg);
-}
-
-/* Contenu de la légende */
-.legend {
-    background-color: rgba(255, 255, 255, 0.95);
-    color: #333;
-    padding: 15px;
-    border-top: none;
+/* --- FAB (Floating Action Button) --- */
+.fab {
+    position: absolute;
+    bottom: 100px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: var(--primary-gradient);
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    cursor: pointer;
     display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
     align-items: center;
     justify-content: center;
-    max-height: 300px;
-    transition: all 0.3s ease-out;
-    overflow-y: auto;
+    transition: transform var(--transition-bounce);
+    z-index: 1001;
 }
 
-/* ----- L'ÉTAT FERMÉ (CLOSED) ----- */
-.legend-container.closed .legend {
-    max-height: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-    border-top: none;
-    overflow: hidden;
+.fab:active {
+    transform: scale(0.9);
 }
 
-.legend-container.closed .legend-handle {
-    border-bottom-color: transparent;
+/* --- Legend / Bottom Panel --- */
+.bottom-panel {
+    width: 100%;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding: 16px 0;
+    background: rgba(255, 255, 255, 0.85);
+    /* Slightly more opaque */
+    transition: transform 0.3s ease;
 }
 
-.legend-container.closed .legend-handle .arrow {
-    transform: rotate(180deg);
+.panel-handle {
+    width: 40px;
+    height: 4px;
+    background-color: #cbd5e1;
+    border-radius: 2px;
+    margin: 0 auto 12px;
 }
 
-
-/* Styles des items de la légende */
-.legend div {
+.filter-scroll {
     display: flex;
-    align-items: center;
-    cursor: pointer;
+    overflow-x: auto;
+    padding: 0 20px;
+    gap: 10px;
+    scrollbar-width: none;
+    /* Hide scrollbar Firefox */
+}
+
+.filter-scroll::-webkit-scrollbar {
+    display: none;
+    /* Hide scrollbar Chrome/Safari */
+}
+
+.filter-chip {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid transparent;
+    background: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
     font-weight: 500;
+    color: var(--text-muted);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.legend div:hover {
-    color: #000;
+.filter-chip.active {
+    background: var(--text-main);
+    color: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
-.legend span {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    margin-right: 8px;
-    border-radius: 50%;
-    border: 1px solid rgba(0, 0, 0, 0.2);
-}
-
-#show-all-container {
+/* =========================================
+   4. MODAL & FORM
+   ========================================= */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    /* Dimmed background */
+    backdrop-filter: blur(4px);
+    z-index: 2000;
     display: flex;
     align-items: center;
+    /* Center vertically on desktop */
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
 }
 
-#show-all {
-    background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
-    width: 20px;
-    height: 20px;
-    margin-right: 8px;
+.modal-backdrop:not(.hidden) {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal {
+    width: 90%;
+    max-width: 400px;
+    padding: 24px;
+    border-radius: var(--radius-lg);
+    background: white;
+    /* Solid background for legibility */
+    transform: translateY(20px);
+    transition: transform 0.3s ease-out;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-backdrop:not(.hidden) .modal {
+    transform: translateY(0);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 8px;
     border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.close-btn:hover {
+    background: #f1f5f9;
+}
+
+/* Form Elements */
+.input-group {
+    margin-bottom: 16px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.input-group input,
+.input-group select,
+.input-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: var(--radius-sm);
+    background: #f8fafc;
+    font-size: 1rem;
+    color: var(--text-main);
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.input-group input:focus,
+.input-group select:focus,
+.input-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: white;
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: var(--radius-md);
+    background: var(--primary-gradient);
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
     transition: transform 0.2s;
 }
 
-#show-all:hover {
-    transform: scale(1.1);
+.submit-btn:active {
+    transform: scale(0.98);
 }
 
-#show-all:active {
-    transform: scale(1);
+/* =========================================
+   5. RESPONSIVE
+   ========================================= */
+@media (min-width: 768px) {
+    .bottom-panel {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        width: auto;
+        border-radius: var(--radius-lg);
+        background: var(--bg-glass);
+    }
+
+    .fab {
+        right: 40px;
+        bottom: 40px;
+    }
+}
+
+.hidden {
+    display: none !important;
 }
